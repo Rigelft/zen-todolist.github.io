@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Zen To-Do List</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="user-icon">
+        <i class="fas fa-user-circle fa-3x"></i>
+        <div class="dropdown-content" style="display: none;">
+            <button id="loginBtn">Connexion</button>
+            <button id="signupBtn">Inscription</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelector('.fa-user-circle').addEventListener('click', function () {
+                var dropdown = document.querySelector('.dropdown-content');
+                dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+            });
+        });
+    </script>
+
+    <div id="loginPopup" class="modal">
+        <div class="modal-content">
+            <span class="closeBtn">&times;</span>
+            <h2>Connexion</h2>
+            <!-- Formulaires de connexion -->
+            <input type="text" placeholder="Email" required id="loginEmail">
+            <input type="password" placeholder="Mot de passe" required id="loginPassword">
+            <label><input type="checkbox"> Se souvenir de moi</label>
+            <button type="submit" id="loginSubmitBtn">Se connecter</button>
+            <p>Vous n'avez pas de compte ? <span id="switchToSignup"
+                    style="cursor: pointer; color: #007bff;">Inscrivez-vous</span></p>
+        </div>
+    </div>
+
+    <div id="signupPopup" class="modal">
+        <div class="modal-content">
+            <span class="closeBtn">&times;</span>
+            <h2>Inscription</h2>
+            <!-- Formulaires d'inscription -->
+            <input type="text" placeholder="Nom et prénom" required id="signupName">
+            <input type="text" placeholder="Email" required id="signupEmail">
+            <input type="password" placeholder="Mot de passe" required id="signupPassword">
+            <input type="password" placeholder="Confirmer le mot de passe" required id="confirmPassword">
+            <label><input type="checkbox"> Recevoir les nouvelles offres</label>
+            <button type="submit" id="signupSubmitBtn">S'inscrire</button>
+            <p>Vous avez déjà un compte ? <span id="switchToLogin"
+                    style="cursor: pointer; color: #007bff;">Connectez-vous</span></p>
+        </div>
+    </div>
+
+    <div id="statusMessage"></div>
+
+
+    <!-- message de bienvenue -->
+    <div class="welcome-box">
+        <h1>Bienvenue sur votre dashboard Zen To-Do List</h1>
+        <p>Gérez vos tâches avec efficacité et simplicité.</p>
+        <button id="addTaskBtn"><i class="fa fa-plus" aria-hidden="true"></i> Ajouter une tâche</button>
+    </div>
+    <div class="task-list">
+        <h2>Vos tâches</h2>
+        <table id="taskTable">
+            <thead>
+                <tr>
+                    <th>Valider</th>
+                    <th>Titre</th>
+                    <th>Date d'ajout</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Les tâches seront ajoutées ici dynamiquement -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Ajouter une tâche Pop-up -->
+    <div id="addTaskModal" class="modal">
+        <div class="modal-content">
+            <span class="closeBtn">&times;</span>
+            <h2>Ajouter une nouvelle tâche</h2>
+            <hr>
+            <form id="addTaskForm">
+                <input type="text" id="taskName" placeholder="Nom de la tâche" required>
+                <textarea id="taskDescription" placeholder="Description de la tâche" required
+                    style="resize: vertical;"></textarea>
+                <button type="submit">Ajouter la tâche</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modifier une tâche Pop-up -->
+    <div id="editTaskModal" class="modal">
+        <div class="modal-content">
+            <span class="closeBtn" onclick="closeEditModal()">&times;</span>
+            <h2>Modifier la tâche</h2>
+            <hr>
+            <form id="editTaskForm">
+                <input type="hidden" id="editTaskId">
+                <input type="text" id="editTaskName" placeholder="Nom de la tâche" required>
+                <textarea id="editTaskDescription" placeholder="Description de la tâche" required></textarea>
+                <button type="submit">Modifier la tâche</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Voir les détails de la tâche Pop-up -->
+    <div id="viewTaskModal" class="modal">
+        <div class="modal-content">
+            <span class="closeBtn" onclick="closeViewModal()">&times;</span>
+            <h2>Détails de la tâche</h2>
+            <hr>
+            <p id="taskDetails"></p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Affichage du dropdown
+            document.querySelector('.fa-user-circle').addEventListener('click', function () {
+                document.querySelector('.dropdown-content').style.display = 'block';
+            });
+
+            // Gestion des boutons de connexion et d'inscription
+            document.getElementById('loginBtn').addEventListener('click', function () {
+                document.getElementById('loginPopup').style.display = 'block';
+            });
+
+            document.getElementById('signupBtn').addEventListener('click', function () {
+                document.getElementById('signupPopup').style.display = 'block';
+            });
+
+            // Fermeture des popups
+            document.querySelectorAll('.closeBtn').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    this.parentElement.parentElement.style.display = 'none';
+                });
+            });
+
+            // Changement entre connexion et inscription
+            document.getElementById('switchToSignup').addEventListener('click', function () {
+                document.getElementById('loginPopup').style.display = 'none';
+                document.getElementById('signupPopup').style.display = 'block';
+            });
+
+            document.getElementById('switchToLogin').addEventListener('click', function () {
+                document.getElementById('signupPopup').style.display = 'none';
+                document.getElementById('loginPopup').style.display = 'block';
+            });
+        });
+
+        function login() {
+            // Logique de connexion
+            alert('Connexion réussie pour ' + document.getElementById('loginEmail').value);
+            // Fermez le popup après la connexion
+            document.getElementById('loginPopup').style.display = 'none';
+        }
+
+        function signup() {
+            // Logique d'inscription
+            alert('Inscription réussie pour ' + document.getElementById('signupEmail').value);
+            // Fermez le popup après l'inscription
+            document.getElementById('signupPopup').style.display = 'none';
+        }
+    </script>
+
+    <script>
+        document.getElementById('addTaskBtn').addEventListener('click', function () {
+            document.getElementById('addTaskModal').style.display = 'block';
+        });
+
+        document.querySelectorAll('.closeBtn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                this.parentElement.parentElement.style.display = 'none';
+            });
+        });
+
+        window.onclick = function (event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        };
+
+        document.getElementById('addTaskForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            addTask();
+        });
+
+        document.getElementById('editTaskForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const taskId = document.getElementById('editTaskId').value;
+            const taskName = document.getElementById('editTaskName').value;
+            const taskDescription = document.getElementById('editTaskDescription').value;
+            updateTask(taskId, taskName, taskDescription);
+        });
+
+        function addTask() {
+            const taskName = document.getElementById('taskName').value;
+            const taskDescription = document.getElementById('taskDescription').value;
+            if (!taskName || !taskDescription) return;
+            const taskList = JSON.parse(localStorage.getItem('tasks')) || [];
+            const newTask = {
+                id: Date.now(),
+                name: taskName,
+                description: taskDescription,
+                date: new Date().toLocaleDateString(),
+            };
+            taskList.push(newTask);
+            localStorage.setItem('tasks', JSON.stringify(taskList));
+            displayTasks();
+            document.getElementById('addTaskModal').style.display = 'none';
+            document.getElementById('addTaskForm').reset();
+        }
+
+        function displayTasks() {
+            const taskList = JSON.parse(localStorage.getItem('tasks')) || [];
+            const tbody = document.getElementById('taskTable').getElementsByTagName('tbody')[0];
+            tbody.innerHTML = '';
+            taskList.forEach(task => {
+                const row = tbody.insertRow();
+                row.innerHTML = `
+            <td><input type="checkbox"></td>
+            <td>${task.name}</td>
+            <td>${task.date}</td>
+            <td class="action-btns"><button onclick="editTask(${task.id})">Modifier</button><button onclick="deleteTask(${task.id})">Supprimer</button><button onclick="viewTask(${task.id})">Voir</button></td>
+        `;
+            });
+        }
+
+        function editTask(taskId) {
+            const taskList = JSON.parse(localStorage.getItem('tasks')) || [];
+            const taskToEdit = taskList.find(task => task.id === taskId);
+            if (taskToEdit) {
+                document.getElementById('editTaskId').value = taskToEdit.id;
+                document.getElementById('editTaskName').value = taskToEdit.name;
+                document.getElementById('editTaskDescription').value = taskToEdit.description;
+                document.getElementById('editTaskModal').style.display = 'block';
+            }
+        }
+
+        function updateTask(taskId, name, description) {
+            let taskList = JSON.parse(localStorage.getItem('tasks')) || [];
+            taskList = taskList.map(task => {
+                if (task.id.toString() === taskId) {
+                    return { ...task, name, description };
+                }
+                return task;
+            });
+            localStorage.setItem('tasks', JSON.stringify(taskList));
+            displayTasks();
+            document.getElementById('editTaskModal').style.display = 'none';
+        }
+
+        function closeEditModal() {
+            document.getElementById('editTaskModal').style.display = 'none';
+        }
+
+        function viewTask(taskId) {
+            const taskList = JSON.parse(localStorage.getItem('tasks')) || [];
+            const taskToView = taskList.find(task => task.id === taskId);
+            if (taskToView) {
+                document.getElementById('taskDetails').innerText = `Nom : ${taskToView.name}\nDescription : ${taskToView.description}`;
+                document.getElementById('viewTaskModal').style.display = 'block';
+            }
+        }
+
+        function closeViewModal() {
+            document.getElementById('viewTaskModal').style.display = 'none';
+        }
+
+        function deleteTask(taskId) {
+            const taskList = JSON.parse(localStorage.getItem('tasks')) || [];
+            const updatedTaskList = taskList.filter(task => task.id !== taskId);
+            localStorage.setItem('tasks', JSON.stringify(updatedTaskList));
+            displayTasks();
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            displayTasks();
+        });
+    </script>
+
+</body>
+
+</html>
